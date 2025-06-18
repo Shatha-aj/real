@@ -10,33 +10,61 @@ df = load_data()
 
 st.title("🏘️ Riyadh Property Neighborhood Recommender")
 
-st.markdown("Get the **top 3 neighborhoods** to buy a property in Riyadh based on your budget and preferred property type.")
+st.markdown("""
+Use the filters below to find the top 3 neighborhoods matching your preferences.
+""")
 
-# Sidebar user input
-st.sidebar.header("🔍 Filter Options")
+# Sidebar filters
+st.sidebar.header("🔍 Search Filters")
 
-# Select box for property type
-property_types = df["Property Type"].dropna().unique().tolist()
-selected_type = st.sidebar.selectbox("Choose Property Type", sorted(property_types))
-
-# Slider for budget
+# Budget slider
 min_price = int(df["Selling Price (SAR)"].min())
 max_price = int(df["Selling Price (SAR)"].max())
-selected_budget = st.sidebar.slider("Set your budget (SAR)", min_price, max_price, 1000000, step=50000)
+budget = st.sidebar.slider("Budget (SAR)", min_price, max_price, 1_000_000, step=50_000)
 
-# Filter the data
+# Bedrooms selectbox
+bedroom_options = sorted(df["Bedrooms"].dropna().unique())
+bedrooms = st.sidebar.selectbox("Bedrooms", bedroom_options)
+
+# Bathrooms selectbox
+bathroom_options = sorted(df["Bathrooms"].dropna().unique())
+bathrooms = st.sidebar.selectbox("Bathrooms", bathroom_options)
+
+# Floor Number slider (assumes floor numbers start from 0 or 1)
+min_floor = int(df["Floor Number"].min())
+max_floor = int(df["Floor Number"].max())
+floor_number = st.sidebar.slider("Floor Number", min_floor, max_floor, min_floor)
+
+# Elevator selectbox
+elevator_options = df["Elevator"].dropna().unique().tolist()
+elevator = st.sidebar.selectbox("Elevator", elevator_options)
+
+# Property Age slider
+min_age = int(df["Property Age (years)"].min())
+max_age = int(df["Property Age (years)"].max())
+property_age = st.sidebar.slider("Max Property Age (years)", min_age, max_age, max_age)
+
+# Furnished selectbox
+furnished_options = df["Furnished"].dropna().unique().tolist()
+furnished = st.sidebar.selectbox("Furnished", furnished_options)
+
+# Filter the dataframe based on user input
 filtered = df[
-    (df["Property Type"] == selected_type) &
-    (df["Selling Price (SAR)"] <= selected_budget)
+    (df["Selling Price (SAR)"] <= budget) &
+    (df["Bedrooms"] == bedrooms) &
+    (df["Bathrooms"] == bathrooms) &
+    (df["Floor Number"] == floor_number) &
+    (df["Elevator"] == elevator) &
+    (df["Property Age (years)"] <= property_age) &
+    (df["Furnished"] == furnished)
 ]
 
-# Show results
-st.subheader(f"Top 3 Neighborhoods for a '{selected_type}' under {selected_budget:,.0f} SAR")
+st.subheader(f"Top 3 Neighborhoods matching your criteria")
 
 if filtered.empty:
-    st.warning("❌ No matching properties found. Try increasing your budget or changing property type.")
+    st.warning("No properties found matching your filters. Try adjusting them.")
 else:
-    top_neigh = (
+    top_neighborhoods = (
         filtered.groupby("Neighborhood")
         .agg(
             Listings=('Selling Price (SAR)', 'count'),
@@ -49,7 +77,7 @@ else:
     )
 
     st.dataframe(
-        top_neigh.style.format({
+        top_neighborhoods.style.format({
             "Median_Price": "SAR {:.0f}",
             "Avg_Area": "{:.1f} sqm"
         })
