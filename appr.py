@@ -10,50 +10,38 @@ df = load_data()
 
 st.title("🏘️ Riyadh Property Neighborhood Recommender")
 
-st.markdown("""
-Use the filters below to find the top 3 neighborhoods matching your preferences.
-""")
+st.markdown("Use the filters below, then click the button to get the top 3 neighborhoods that match your preferences.")
 
 # Sidebar filters
 st.sidebar.header("🔍 Search Filters")
 
-# Input fields in a form
-with st.sidebar.form("input_form"):
-    # Budget slider
-    min_price = int(df["Selling Price (SAR)"].min())
-    max_price = int(df["Selling Price (SAR)"].max())
-    budget = st.slider("Budget (SAR)", min_price, max_price, 1_000_000, step=50_000)
+# Budget slider
+min_price = int(df["Selling Price (SAR)"].min())
+max_price = int(df["Selling Price (SAR)"].max())
+budget = st.sidebar.slider("Budget (SAR)", min_price, max_price, 1_000_000, step=50_000)
 
-    # Bedrooms selectbox
-    bedroom_options = sorted(df["Bedrooms"].dropna().unique())
-    bedrooms = st.selectbox("Bedrooms", bedroom_options)
+# Bedrooms selectbox
+bedrooms = st.sidebar.selectbox("Bedrooms", sorted(df["Bedrooms"].dropna().unique()))
 
-    # Bathrooms selectbox
-    bathroom_options = sorted(df["Bathrooms"].dropna().unique())
-    bathrooms = st.selectbox("Bathrooms", bathroom_options)
+# Bathrooms selectbox
+bathrooms = st.sidebar.selectbox("Bathrooms", sorted(df["Bathrooms"].dropna().unique()))
 
-    # Floor Number slider
-    min_floor = int(df["Floor Number"].min())
-    max_floor = int(df["Floor Number"].max())
-    floor_number = st.slider("Floor Number", min_floor, max_floor, min_floor)
+# Floor Number slider
+floor_number = st.sidebar.slider("Floor Number", int(df["Floor Number"].min()), int(df["Floor Number"].max()), 0)
 
-    # Elevator selectbox
-    elevator_options = df["Elevator"].dropna().unique().tolist()
-    elevator = st.selectbox("Elevator", elevator_options)
+# Elevator selectbox
+elevator = st.sidebar.selectbox("Elevator", df["Elevator"].dropna().unique().tolist())
 
-    # Property Age slider
-    min_age = int(df["Property Age (years)"].min())
-    max_age = int(df["Property Age (years)"].max())
-    property_age = st.slider("Max Property Age (years)", min_age, max_age, max_age)
+# Property Age slider
+property_age = st.sidebar.slider("Max Property Age (years)", int(df["Property Age (years)"].min()), int(df["Property Age (years)"].max()), 10)
 
-    # Furnished selectbox
-    furnished_options = df["Furnished"].dropna().unique().tolist()
-    furnished = st.selectbox("Furnished", furnished_options)
+# Furnished selectbox
+furnished = st.sidebar.selectbox("Furnished", df["Furnished"].dropna().unique().tolist())
 
-    submitted = st.form_submit_button("Find Neighborhoods")
+# Button to trigger search
+if st.sidebar.button("🔎 Find Neighborhoods"):
 
-if submitted:
-    # Filter the dataframe based on user input
+    # Filter based on all inputs
     filtered = df[
         (df["Selling Price (SAR)"] <= budget) &
         (df["Bedrooms"] == bedrooms) &
@@ -64,10 +52,10 @@ if submitted:
         (df["Furnished"] == furnished)
     ]
 
-    st.subheader("Top 3 Neighborhoods matching your criteria")
+    st.subheader(f"Top 3 Neighborhoods for Your Criteria")
 
     if filtered.empty:
-        st.warning("No properties found matching your filters. Try adjusting them.")
+        st.warning("❌ No matching properties found. Try adjusting your filters.")
     else:
         top_neighborhoods = (
             filtered.groupby("Neighborhood")
@@ -87,5 +75,5 @@ if submitted:
                 "Avg_Area": "{:.1f} sqm"
             })
         )
-
-   
+else:
+    st.info("👈 Set your filters and click 'Find Neighborhoods' to get started.")
