@@ -52,8 +52,8 @@ if st.sidebar.button("Find Neighborhoods"):
         (df["Property Age (years)"] <= property_age) &
         (df["Furnished"] == furnished)
     ]
-
-   if filtered.empty:
+    
+if filtered.empty:
     st.warning("⚠️ No properties match your criteria.")
 else:
     st.success("🎯 Top 3 Neighborhoods Matching Your Criteria")
