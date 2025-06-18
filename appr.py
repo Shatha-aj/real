@@ -4,37 +4,40 @@ import pandas as pd
 # Load data
 @st.cache_data
 def load_data():
-    df = pd.read_csv("riyadh.csv")
-    return df
+    return pd.read_csv("riyadh.csv")
 
 df = load_data()
 
-st.title("🏘️ Riyadh Neighborhood Recommender")
+st.title("🏘️ Riyadh Property Neighborhood Recommender")
 
-# --- Sidebar User Input ---
-st.sidebar.header("Search Filters")
+st.markdown("Get the **top 3 neighborhoods** to buy a property in Riyadh based on your budget and preferred property type.")
 
-# Property type selection
-property_types = df["Property Type"].dropna().unique()
+# Sidebar user input
+st.sidebar.header("🔍 Filter Options")
+
+# Select box for property type
+property_types = df["Property Type"].dropna().unique().tolist()
 selected_type = st.sidebar.selectbox("Choose Property Type", sorted(property_types))
 
-# Budget input
-budget = st.sidebar.number_input("Enter your budget (SAR)", min_value=50000, step=50000, value=1000000)
+# Slider for budget
+min_price = int(df["Selling Price (SAR)"].min())
+max_price = int(df["Selling Price (SAR)"].max())
+selected_budget = st.sidebar.slider("Set your budget (SAR)", min_price, max_price, 1000000, step=50000)
 
-# --- Filter data ---
-filtered_df = df[
+# Filter the data
+filtered = df[
     (df["Property Type"] == selected_type) &
-    (df["Selling Price (SAR)"] <= budget)
+    (df["Selling Price (SAR)"] <= selected_budget)
 ]
 
-st.subheader(f"Top 3 Neighborhoods to buy a '{selected_type}' under {budget:,.0f} SAR")
+# Show results
+st.subheader(f"Top 3 Neighborhoods for a '{selected_type}' under {selected_budget:,.0f} SAR")
 
-if filtered_df.empty:
-    st.warning("No matching properties found. Try increasing the budget or changing property type.")
+if filtered.empty:
+    st.warning("❌ No matching properties found. Try increasing your budget or changing property type.")
 else:
-    # Group by neighborhood and summarize
-    top_neighborhoods = (
-        filtered_df.groupby("Neighborhood")
+    top_neigh = (
+        filtered.groupby("Neighborhood")
         .agg(
             Listings=('Selling Price (SAR)', 'count'),
             Median_Price=('Selling Price (SAR)', 'median'),
@@ -45,12 +48,9 @@ else:
         .reset_index()
     )
 
-    # Format and display result
     st.dataframe(
-        top_neighborhoods.style.format({
+        top_neigh.style.format({
             "Median_Price": "SAR {:.0f}",
             "Avg_Area": "{:.1f} sqm"
         })
     )
-
-    
