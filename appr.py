@@ -42,6 +42,7 @@ property_age = st.sidebar.slider("Max Property Age (years)", 0, int(df["Property
 furnished = st.sidebar.selectbox("Furnished", df["Furnished"].unique())
 
 # Button to filter
+# Button to filter
 if st.sidebar.button("Find Neighborhoods"):
     filtered = df[
         (df["Selling Price (SAR)"] <= budget) &
@@ -53,28 +54,26 @@ if st.sidebar.button("Find Neighborhoods"):
         (df["Furnished"] == furnished)
     ]
     
-if filtered.empty:
-    st.warning("⚠️ No properties match your criteria.")
-else:
-    st.success("🎯 Top 3 Neighborhoods Matching Your Criteria")
+    if filtered.empty:
+        st.warning("⚠️ No properties match your criteria.")
+    else:
+        st.success("🎯 Top 3 Neighborhoods Matching Your Criteria")
 
-    top_neighs = (
-        filtered["Neighborhood"]
-        .value_counts()
-        .head(3)
-        .index.tolist()
-    )
+        top_neighs = (
+            filtered["Neighborhood"]
+            .value_counts()
+            .head(3)
+            .index.tolist()
+        )
 
-    for neigh in top_neighs:
-        subset = filtered[filtered["Neighborhood"] == neigh]
-        example = subset.head(1).iloc[0]  # Take first matching example
+        for neigh in top_neighs:
+            subset = filtered[filtered["Neighborhood"] == neigh]
+            example = subset.head(1).iloc[0]  # Take first matching example
 
-        st.markdown(f"### 🏘️ {neigh}")
-        st.markdown(f"- **Region:** {example['Region']}")
-        st.markdown(f"- **Area:** {example['Area (sqm)']} sqm")
-        st.markdown(f"- **Selling Price:** {example['Selling Price (SAR)']:.0f} SAR")
-        st.markdown("---")
+            st.markdown(f"### 🏘️ {neigh}")
+            st.markdown(f"- **Region:** {example['Region']}")
+            st.markdown(f"- **Area:** {example['Area (sqm)']} sqm")
+            st.markdown(f"- **Selling Price:** {example['Selling Price (SAR)']:.0f} SAR")
+            st.markdown("---")
 else:
     st.info("👉 Set your filters and click 'Find Neighborhoods' to get started.")
-
-  
