@@ -1,47 +1,48 @@
 import streamlit as st
 import pandas as pd
 
-# Load data
-@st.cache_data
-def load_data():
-    return pd.read_csv("riyadh.csv")
-
-df = load_data()
+# --- Custom CSS for background ---
+st.markdown("""
+    <style>
+    .stApp {
+        background: linear-gradient(to right, #e0f7fa, #fce4ec);
+        font-family: 'Segoe UI', sans-serif;
+    }
+    .stButton>button {
+        background-color: #7b1fa2;
+        color: white;
+        border-radius: 10px;
+        padding: 10px 20px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 st.title("🏘️ Riyadh Property Neighborhood Recommender")
 
-st.markdown("Use the filters below, then click the button to get the top 3 neighborhoods that match your preferences.")
+# Load your real estate dataset
+@st.cache_data
+def load_data():
+    df = pd.read_csv("riyadh.csv")  # <- Replace with your file
+    df["Elevator"] = df["Elevator"].astype(str)
+    df["Furnished"] = df["Furnished"].astype(str)
+    return df
+
+df = load_data()
 
 # Sidebar filters
-st.sidebar.header("🔍 Search Filters")
+st.sidebar.header("🔍 Set Your Preferences")
 
-# Budget slider
-min_price = int(df["Selling Price (SAR)"].min())
-max_price = int(df["Selling Price (SAR)"].max())
-budget = st.sidebar.slider("Budget (SAR)", min_price, max_price, 1_000_000, step=50_000)
+budget = st.sidebar.number_input("Enter your budget (SAR)", min_value=0, step=10000, value=1_000_000)
 
-# Bedrooms selectbox
-bedrooms = st.sidebar.selectbox("Bedrooms", sorted(df["Bedrooms"].dropna().unique()))
+bedrooms = st.sidebar.selectbox("Bedrooms", sorted(df["Bedrooms"].unique()))
+bathrooms = st.sidebar.selectbox("Bathrooms", sorted(df["Bathrooms"].unique()))
+floor_number = st.sidebar.selectbox("Floor Number", sorted(df["Floor Number"].unique()))
+elevator = st.sidebar.selectbox("Elevator", df["Elevator"].unique())
+property_age = st.sidebar.slider("Max Property Age (years)", 0, int(df["Property Age (years)"].max()), 10)
+furnished = st.sidebar.selectbox("Furnished", df["Furnished"].unique())
 
-# Bathrooms selectbox
-bathrooms = st.sidebar.selectbox("Bathrooms", sorted(df["Bathrooms"].dropna().unique()))
-
-# Floor Number slider
-floor_number = st.sidebar.slider("Floor Number", int(df["Floor Number"].min()), int(df["Floor Number"].max()), 0)
-
-# Elevator selectbox
-elevator = st.sidebar.selectbox("Elevator", df["Elevator"].dropna().unique().tolist())
-
-# Property Age slider
-property_age = st.sidebar.slider("Max Property Age (years)", int(df["Property Age (years)"].min()), int(df["Property Age (years)"].max()), 10)
-
-# Furnished selectbox
-furnished = st.sidebar.selectbox("Furnished", df["Furnished"].dropna().unique().tolist())
-
-# Button to trigger search
-if st.sidebar.button("🔎 Find Neighborhoods"):
-
-    # Filter based on all inputs
+# Button to filter
+if st.sidebar.button("Find Neighborhoods"):
     filtered = df[
         (df["Selling Price (SAR)"] <= budget) &
         (df["Bedrooms"] == bedrooms) &
@@ -52,28 +53,19 @@ if st.sidebar.button("🔎 Find Neighborhoods"):
         (df["Furnished"] == furnished)
     ]
 
-    st.subheader(f"Top 3 Neighborhoods for Your Criteria")
-
     if filtered.empty:
-        st.warning("❌ No matching properties found. Try adjusting your filters.")
+        st.warning("⚠️ No properties match your criteria.")
     else:
-        top_neighborhoods = (
+        top_neigh = (
             filtered.groupby("Neighborhood")
-            .agg(
-                Listings=('Selling Price (SAR)', 'count'),
-                Median_Price=('Selling Price (SAR)', 'median'),
-                Avg_Area=('Area (sqm)', 'mean')
-            )
-            .sort_values(by="Listings", ascending=False)
+            .size()
+            .sort_values(ascending=False)
             .head(3)
-            .reset_index()
+            .reset_index(name="Available Listings")
         )
-
-        st.dataframe(
-            top_neighborhoods.style.format({
-                "Median_Price": "SAR {:.0f}",
-                "Avg_Area": "{:.1f} sqm"
-            })
-        )
+        st.success("🎯 Top 3 Neighborhoods Matching Your Criteria")
+        st.table(top_neigh)
 else:
-    st.info("👈 Set your filters and click 'Find Neighborhoods' to get started.")
+    st.info("👉 Set your filters and click 'Find Neighborhoods' to get started.")
+
+  
