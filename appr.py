@@ -1,18 +1,16 @@
 import streamlit as st
 import pandas as pd
 
-# Load data
+# Load data with caching
 @st.cache_data
 def load_data():
     return pd.read_csv("riyadh.csv")
 
 df = load_data()
 
+# Title and description
 st.title("🏘️ Riyadh Property Neighborhood Recommender")
-
-st.markdown("""
-Use the filters below to find the top 3 neighborhoods matching your preferences.
-""")
+st.markdown("Use the filters below to find the top 3 neighborhoods matching your preferences.")
 
 # Sidebar filters
 st.sidebar.header("🔍 Search Filters")
@@ -30,7 +28,7 @@ bedrooms = st.sidebar.selectbox("Bedrooms", bedroom_options)
 bathroom_options = sorted(df["Bathrooms"].dropna().unique())
 bathrooms = st.sidebar.selectbox("Bathrooms", bathroom_options)
 
-# Floor Number slider (assumes floor numbers start from 0 or 1)
+# Floor Number slider
 min_floor = int(df["Floor Number"].min())
 max_floor = int(df["Floor Number"].max())
 floor_number = st.sidebar.slider("Floor Number", min_floor, max_floor, min_floor)
@@ -59,6 +57,7 @@ filtered = df[
     (df["Furnished"] == furnished)
 ]
 
+# Display results
 st.subheader(f"Top 3 Neighborhoods matching your criteria")
 
 if filtered.empty:
@@ -82,3 +81,6 @@ else:
             "Avg_Area": "{:.1f} sqm"
         })
     )
+
+
+     
