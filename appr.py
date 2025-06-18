@@ -53,18 +53,27 @@ if st.sidebar.button("Find Neighborhoods"):
         (df["Furnished"] == furnished)
     ]
 
-    if filtered.empty:
-        st.warning("⚠️ No properties match your criteria.")
-    else:
-        top_neigh = (
-            filtered.groupby("Neighborhood")
-            .size()
-            .sort_values(ascending=False)
-            .head(3)
-            .reset_index(name="Available Listings")
-        )
-        st.success("🎯 Top 3 Neighborhoods Matching Your Criteria")
-        st.table(top_neigh)
+   if filtered.empty:
+    st.warning("⚠️ No properties match your criteria.")
+else:
+    st.success("🎯 Top 3 Neighborhoods Matching Your Criteria")
+
+    top_neighs = (
+        filtered["Neighborhood"]
+        .value_counts()
+        .head(3)
+        .index.tolist()
+    )
+
+    for neigh in top_neighs:
+        subset = filtered[filtered["Neighborhood"] == neigh]
+        example = subset.head(1).iloc[0]  # Take first matching example
+
+        st.markdown(f"### 🏘️ {neigh}")
+        st.markdown(f"- **Region:** {example['Region']}")
+        st.markdown(f"- **Area:** {example['Area (sqm)']} sqm")
+        st.markdown(f"- **Selling Price:** {example['Selling Price (SAR)']:.0f} SAR")
+        st.markdown("---")
 else:
     st.info("👉 Set your filters and click 'Find Neighborhoods' to get started.")
 
